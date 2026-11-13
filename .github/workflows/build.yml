@@ -1,4 +1,3 @@
-
 name: Build APK
 
 on:
@@ -21,21 +20,27 @@ jobs:
         with:
           gradle-version: 8.9
 
-      - name: Unzip project if zip is present
+      - name: Unzip any project zip in repo root
         run: |
-          if [ -f EarnStarTracker.zip ]; then
-            unzip -oq EarnStarTracker.zip
-            echo "Unzipped EarnStarTracker.zip"
-          else
-            echo "No EarnStarTracker.zip in repo root, looking for project folder"
-          fi
+          shopt -s nullglob
+          for z in *.zip; do
+            echo "Unzipping $z"
+            unzip -oq "$z"
+          done
+          echo "Repo root contents:"
+          ls -la
 
       - name: Locate Gradle project
         id: find
         run: |
           f=$(find . -name settings.gradle.kts -not -path "*/build/*" -not -path "*/.gradle/*" | head -n 1)
           if [ -z "$f" ]; then
-            echo "ERROR: No project found. Upload EarnStarTracker.zip to the repo root."
+            f=$(find . -name settings.gradle -not -path "*/build/*" -not -path "*/.gradle/*" | head -n 1)
+          fi
+          if [ -z "$f" ]; then
+            echo "ERROR: No project found."
+            echo "Expected a file named EarnStarTracker.zip in the repo ROOT (main page)."
+            echo "Files that ARE in the repo root are listed above."
             exit 1
           fi
           dir=$(dirname "$f")
